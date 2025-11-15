@@ -48,6 +48,36 @@ document.addEventListener('DOMContentLoaded', () => {
 			document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' });
 		};
 	}
+	
+	// Hero区域搜索功能
+	const heroSearchInput = document.getElementById('hero-search-input');
+	const heroSearchBtn = document.getElementById('hero-search-btn');
+	
+	if (heroSearchBtn && heroSearchInput) {
+		// 搜索按钮点击
+		heroSearchBtn.onclick = (e) => {
+			e.preventDefault();
+			const keyword = heroSearchInput.value.trim();
+			if (heroSection) {
+				heroSection.style.display = 'none';
+			}
+			window.products.showProductList(keyword);
+			document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' });
+		};
+		
+		// 回车键搜索
+		heroSearchInput.onkeypress = (e) => {
+			if (e.key === 'Enter') {
+				e.preventDefault();
+				const keyword = heroSearchInput.value.trim();
+				if (heroSection) {
+					heroSection.style.display = 'none';
+				}
+				window.products.showProductList(keyword);
+				document.getElementById('main-content').scrollIntoView({ behavior: 'smooth' });
+			}
+		};
+	}
 
 	// 移动端汉堡菜单切换
 	const navToggle = document.getElementById('nav-toggle');

@@ -1,14 +1,28 @@
 const pool = require('../config/db');
 
 /**
- * 查询商品列表
+ * 查询商品列表（支持搜索）
  * @route GET /api/product
+ * @query {string} search - 搜索关键词（可选）
  * @returns {Array} products 商品数组
  */
 exports.list = async (req, res) => {
   try {
-    const [products] = await pool.query('SELECT * FROM products ORDER BY created_at DESC');
-    res.json({ products });
+    const { search } = req.query;
+    let query = 'SELECT * FROM products';
+    let params = [];
+    
+    // 如果有搜索关键词，添加搜索条件
+    if (search && search.trim()) {
+      query += ' WHERE name LIKE ? OR description LIKE ?';
+      const searchPattern = `%${search.trim()}%`;
+      params = [searchPattern, searchPattern];
+    }
+    
+    query += ' ORDER BY created_at DESC';
+    
+    const [products] = await pool.query(query, params);
+    res.json({ products, search: search || '' });
   } catch (err) {
     res.status(500).json({ message: '查询商品失败', error: err.message });
   }

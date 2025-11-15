@@ -1,8 +1,12 @@
 // ========== API 接口封装 ========== //
 
 // ========== 商品相关API ========== //
-async function fetchProducts() {
-	const res = await fetch('/api/product');
+async function fetchProducts(searchKeyword = '') {
+	let url = '/api/product';
+	if (searchKeyword && searchKeyword.trim()) {
+		url += `?search=${encodeURIComponent(searchKeyword.trim())}`;
+	}
+	const res = await fetch(url);
 	return (await res.json()).products || [];
 }
 
