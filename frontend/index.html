@@ -2,33 +2,72 @@
 <html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <title>购物网站</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>购物网站 - 探索你的专属好物</title>
   <link rel="stylesheet" href="css/style.css">
+  <!-- Particle.js for background effects -->
+  <script src="https://cdn.jsdelivr.net/npm/particles.js@2.0.0/particles.min.js"></script>
+  <!-- AOS - Animate On Scroll -->
+  <link href="https://unpkg.com/aos@2.3.1/dist/aos.css" rel="stylesheet">
+  <script src="https://unpkg.com/aos@2.3.1/dist/aos.js"></script>
 </head>
 <body>
-  <header>
-    <h1>购物网站</h1>
-    <nav>
-      <a href="#" id="nav-home">首页</a>
-      <a href="#" id="nav-products">商品</a>
-      <a href="#" id="nav-cart">购物车</a>
-      <a href="#" id="nav-orders">订单</a>
-      <a href="#" id="nav-login">登录</a>
-      <a href="#" id="nav-register">注册</a>
-      <a href="#" id="nav-logout" style="display:none;">注销</a>
-    </nav>
+  <!-- Particle Background -->
+  <div id="particles-js"></div>
+  
+  <!-- Glass morphism header -->
+  <header class="main-header glass-effect">
+    <div class="header-inner">
+      <div class="logo-area" data-aos="fade-right">
+        <div class="logo-icon">🛍️</div>
+        <span class="site-title gradient-text">SHOP</span>
+      </div>
+      <button class="nav-toggle neon-btn" id="nav-toggle" aria-label="打开导航">☰</button>
+      <nav class="main-nav" id="main-nav">
+        <a href="#" id="nav-home" class="nav-link"><span>首页</span></a>
+        <a href="#" id="nav-products" class="nav-link"><span>商品</span></a>
+        <a href="#" id="nav-cart" class="nav-link"><span>购物车</span></a>
+        <a href="#" id="nav-orders" class="nav-link"><span>订单</span></a>
+        <a href="#" id="nav-login" class="nav-link neon-btn"><span>登录</span></a>
+        <a href="#" id="nav-register" class="nav-link neon-btn"><span>注册</span></a>
+        <a href="#" id="nav-logout" class="nav-link neon-btn" style="display:none;"><span>注销</span></a>
+      </nav>
+    </div>
   </header>
-  <main id="main-content">
+  
+  <!-- Hero with 3D effect -->
+  <section class="hero" id="hero">
+    <div class="hero-bg-animated"></div>
+    <div class="hero-inner">
+      <h1 class="hero-title" data-aos="zoom-in" data-aos-duration="1000">
+        <span class="gradient-text glitch" data-text="探索你的专属好物">探索你的专属好物</span>
+      </h1>
+      <p class="hero-sub" data-aos="fade-up" data-aos-delay="200">精选商品 · 安全购物 · 极速发货</p>
+      <button class="hero-cta neon-btn pulse" id="hero-shop-btn" data-aos="fade-up" data-aos-delay="400">
+        <span>开始浏览</span>
+        <div class="btn-glow"></div>
+      </button>
+      <div class="floating-shapes">
+        <div class="shape shape-1"></div>
+        <div class="shape shape-2"></div>
+        <div class="shape shape-3"></div>
+      </div>
+    </div>
+  </section>
+  
+  <main id="main-content" class="container">
     <!-- 动态内容区域 -->
   </main>
 
-  <!-- 登录弹窗 -->
+
+  <!-- 登录弹窗（QQ风格） -->
   <div id="login-modal" class="modal" style="display:none;">
-    <div class="modal-content">
+    <div class="modal-content qq-modal">
       <span class="close" id="close-login">&times;</span>
-      <h2>登录</h2>
+      <div class="qq-logo"></div>
+      <h2 class="qq-title">账号登录</h2>
       <form id="login-form">
-        <input type="text" id="login-username" placeholder="用户名" required><br>
+        <input type="text" id="login-username" placeholder="用户名/邮箱" required><br>
         <input type="password" id="login-password" placeholder="密码" required><br>
         <button type="submit">登录</button>
         <div class="form-error" id="login-error"></div>
@@ -36,11 +75,12 @@
     </div>
   </div>
 
-  <!-- 注册弹窗 -->
+  <!-- 注册弹窗（QQ风格） -->
   <div id="register-modal" class="modal" style="display:none;">
-    <div class="modal-content">
+    <div class="modal-content qq-modal">
       <span class="close" id="close-register">&times;</span>
-      <h2>注册</h2>
+      <div class="qq-logo"></div>
+      <h2 class="qq-title">账号注册</h2>
       <form id="register-form">
         <input type="text" id="register-username" placeholder="用户名" required><br>
         <input type="password" id="register-password" placeholder="密码" required><br>
@@ -51,6 +91,47 @@
     </div>
   </div>
 
+  <footer class="site-footer glass-effect">
+    <div class="footer-inner">
+      <div class="footer-brand gradient-text">© 2025 购物网站 | 品质生活</div>
+      <div class="footer-links">
+        <a href="#" aria-label="关于我们" class="footer-link">关于</a>
+        <a href="#" aria-label="帮助中心" class="footer-link">帮助</a>
+        <a href="#" aria-label="隐私政策" class="footer-link">隐私</a>
+      </div>
+    </div>
+    <div class="footer-wave">
+      <svg viewBox="0 0 1200 120" preserveAspectRatio="none">
+        <path d="M0,0V46.29c47.79,22.2,103.59,32.17,158,28,70.36-5.37,136.33-33.31,206.8-37.5C438.64,32.43,512.34,53.67,583,72.05c69.27,18,138.3,24.88,209.4,13.08,36.15-6,69.85-17.84,104.45-29.34C989.49,25,1113-14.29,1200,52.47V0Z" opacity=".25"></path>
+        <path d="M0,0V15.81C13,36.92,27.64,56.86,47.69,72.05,99.41,111.27,165,111,224.58,91.58c31.15-10.15,60.09-26.07,89.67-39.8,40.92-19,84.73-46,130.83-49.67,36.26-2.85,70.9,9.42,98.6,31.56,31.77,25.39,62.32,62,103.63,73,40.44,10.79,81.35-6.69,119.13-24.28s75.16-39,116.92-43.05c59.73-5.85,113.28,22.88,168.9,38.84,30.2,8.66,59,6.17,87.09-7.5,22.43-10.89,48-26.93,60.65-49.24V0Z" opacity=".5"></path>
+        <path d="M0,0V5.63C149.93,59,314.09,71.32,475.83,42.57c43-7.64,84.23-20.12,127.61-26.46,59-8.63,112.48,12.24,165.56,35.4C827.93,77.22,886,95.24,951.2,90c86.53-7,172.46-45.71,248.8-84.81V0Z"></path>
+      </svg>
+    </div>
+  </footer>
+  
+  <script>
+    // Initialize Particles.js
+    particlesJS('particles-js', {
+      particles: {
+        number: { value: 80, density: { enable: true, value_area: 800 } },
+        color: { value: '#1e90ff' },
+        shape: { type: 'circle' },
+        opacity: { value: 0.5, random: true },
+        size: { value: 3, random: true },
+        line_linked: { enable: true, distance: 150, color: '#1e90ff', opacity: 0.4, width: 1 },
+        move: { enable: true, speed: 2, direction: 'none', random: false, straight: false, out_mode: 'out', bounce: false }
+      },
+      interactivity: {
+        detect_on: 'canvas',
+        events: { onhover: { enable: true, mode: 'repulse' }, onclick: { enable: true, mode: 'push' }, resize: true },
+        modes: { repulse: { distance: 100, duration: 0.4 }, push: { particles_nb: 4 } }
+      },
+      retina_detect: true
+    });
+    
+    // Initialize AOS
+    AOS.init({ duration: 800, once: true, offset: 100 });
+  </script>
   <script src="js/main.js"></script>
 </body>
 </html>
