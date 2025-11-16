@@ -89,3 +89,149 @@ exports.detail = async (req, res) => {
     res.status(500).json({ message: '查询订单详情失败', error: err.message });
   }
 };
+
+/**
+ * 支付订单接口
+ * @route POST /api/order/:id/pay
+ * @param {number} id - 订单ID
+ * @param {string} payment_method - 支付方式 (alipay/wechat/card)
+ * @returns {Object} 支付结果
+ */
+exports.pay = async (req, res) => {
+  const { id } = req.params;
+  const { payment_method } = req.body;
+  const emailUtil = require('../utils/email');
+  
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    
+    // 查询订单
+    const [orders] = await conn.query('SELECT * FROM orders WHERE id = ?', [id]);
+    if (orders.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ message: '订单不存在' });
+    }
+    
+    const order = orders[0];
+    
+    // 检查订单状态
+    if (order.status !== '待支付') {
+      await conn.rollback();
+      return res.status(400).json({ message: '订单状态不正确，无法支付' });
+    }
+    
+    // 模拟支付处理（实际项目中需要对接支付网关）
+    // 这里直接标记为支付成功
+    const paymentTime = new Date();
+    await conn.query(
+      'UPDATE orders SET status = ?, payment_method = ?, payment_time = ? WHERE id = ?',
+      ['已支付', payment_method, paymentTime, id]
+    );
+    
+    // 查询用户邮箱
+    const [users] = await conn.query('SELECT email, username FROM users WHERE id = ?', [order.user_id]);
+    
+    // 查询订单商品明细
+    const [items] = await conn.query(
+      'SELECT oi.*, p.name FROM order_items oi JOIN products p ON oi.product_id = p.id WHERE oi.order_id = ?',
+      [id]
+    );
+    
+    await conn.commit();
+    
+    // 发送订单确认邮件（异步，不阻塞响应）
+    if (users.length > 0 && users[0].email) {
+      emailUtil.sendOrderConfirmation(users[0].email, {
+        orderId: id,
+        totalPrice: order.total_price,
+        items: items,
+        orderTime: new Date(order.created_at).toLocaleString('zh-CN')
+      }).catch(err => {
+        console.error('发送订单确认邮件失败:', err);
+      });
+    }
+    
+    res.json({ 
+      message: '支付成功', 
+      order_id: id,
+      payment_time: paymentTime,
+      status: '已支付'
+    });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ message: '支付失败', error: err.message });
+  } finally {
+    conn.release();
+  }
+};
+
+/**
+ * 确认发货接口
+ * @route POST /api/order/:id/ship
+ * @param {number} id - 订单ID
+ * @param {string} tracking_number - 运单号
+ * @param {string} carrier - 物流公司
+ * @returns {Object} 发货结果
+ */
+exports.ship = async (req, res) => {
+  const { id } = req.params;
+  const { tracking_number, carrier } = req.body;
+  const emailUtil = require('../utils/email');
+  
+  const conn = await pool.getConnection();
+  try {
+    await conn.beginTransaction();
+    
+    // 查询订单
+    const [orders] = await conn.query('SELECT * FROM orders WHERE id = ?', [id]);
+    if (orders.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ message: '订单不存在' });
+    }
+    
+    const order = orders[0];
+    
+    // 检查订单状态
+    if (order.status !== '已支付') {
+      await conn.rollback();
+      return res.status(400).json({ message: '订单状态不正确，无法发货' });
+    }
+    
+    // 更新订单状态
+    await conn.query(
+      'UPDATE orders SET status = ?, tracking_number = ?, carrier = ?, shipped_at = NOW() WHERE id = ?',
+      ['已发货', tracking_number, carrier, id]
+    );
+    
+    // 查询用户邮箱
+    const [users] = await conn.query('SELECT email FROM users WHERE id = ?', [order.user_id]);
+    
+    await conn.commit();
+    
+    // 发送发货通知邮件（异步）
+    if (users.length > 0 && users[0].email) {
+      emailUtil.sendShippingNotification(users[0].email, {
+        orderId: id,
+        trackingNumber: tracking_number,
+        carrier: carrier,
+        estimatedDelivery: '3-5个工作日'
+      }).catch(err => {
+        console.error('发送发货通知邮件失败:', err);
+      });
+    }
+    
+    res.json({ 
+      message: '发货成功', 
+      order_id: id,
+      tracking_number,
+      carrier,
+      status: '已发货'
+    });
+  } catch (err) {
+    await conn.rollback();
+    res.status(500).json({ message: '发货失败', error: err.message });
+  } finally {
+    conn.release();
+  }
+};

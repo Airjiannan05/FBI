@@ -52,6 +52,27 @@ async function createOrder(items, total_price) {
 	return await res.json();
 }
 
+async function payOrder(orderId, paymentMethod) {
+	const res = await fetch(`/api/order/${orderId}/pay`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ payment_method: paymentMethod })
+	});
+	return await res.json();
+}
+
+async function shipOrder(orderId, trackingNumber, carrier) {
+	const res = await fetch(`/api/order/${orderId}/ship`, {
+		method: 'POST',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify({ 
+			tracking_number: trackingNumber,
+			carrier: carrier
+		})
+	});
+	return await res.json();
+}
+
 // ========== 用户相关API ========== //
 async function registerUser(username, password, email) {
 	const res = await fetch('/api/user/register', {
@@ -107,6 +128,8 @@ window.api = {
 	fetchOrders,
 	fetchOrderDetail,
 	createOrder,
+	payOrder,
+	shipOrder,
 	registerUser,
 	loginUser,
 	logoutUser,
