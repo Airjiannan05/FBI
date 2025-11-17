@@ -17,19 +17,50 @@ exports.create = async (req, res) => {
   const conn = await pool.getConnection();
   try {
     await conn.beginTransaction(); // 开启事务
-    // 插入订单主表
+    
+    // 1. 检查库存并锁定商品行（FOR UPDATE）
+    for (const item of items) {
+      const [products] = await conn.query(
+        'SELECT stock FROM products WHERE id = ? FOR UPDATE',
+        [item.product_id]
+      );
+      
+      if (products.length === 0) {
+        await conn.rollback();
+        return res.status(404).json({ message: `商品ID ${item.product_id} 不存在` });
+      }
+      
+      const currentStock = products[0].stock;
+      if (currentStock < item.quantity) {
+        await conn.rollback();
+        return res.status(400).json({ 
+          message: `商品库存不足，当前库存：${currentStock}，需要：${item.quantity}` 
+        });
+      }
+    }
+    
+    // 2. 插入订单主表
     const [orderResult] = await conn.query(
       'INSERT INTO orders (user_id, total_price, status) VALUES (?, ?, ?)',
       [user_id, total_price, '待支付']
     );
     const orderId = orderResult.insertId;
-    // 插入订单商品明细
+    
+    // 3. 插入订单商品明细并扣减库存
     for (const item of items) {
+      // 插入订单商品明细
       await conn.query(
         'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
         [orderId, item.product_id, item.quantity, item.price]
       );
+      
+      // 扣减商品库存
+      await conn.query(
+        'UPDATE products SET stock = stock - ? WHERE id = ?',
+        [item.quantity, item.product_id]
+      );
     }
+    
     await conn.commit(); // 提交事务
     res.json({ message: '订单创建成功', order_id: orderId });
   } catch (err) {
