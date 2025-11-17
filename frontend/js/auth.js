@@ -6,13 +6,19 @@ function updateNavAuth() {
 		document.getElementById('nav-login').style.display = 'none';
 		document.getElementById('nav-register').style.display = 'none';
 		document.getElementById('nav-logout').style.display = '';
-		document.getElementById('nav-sell').style.display = '';
+		document.getElementById('nav-manage').style.display = '';
 	} else {
 		document.getElementById('nav-login').style.display = '';
 		document.getElementById('nav-register').style.display = '';
 		document.getElementById('nav-logout').style.display = 'none';
-		document.getElementById('nav-sell').style.display = 'none';
+		document.getElementById('nav-manage').style.display = 'none';
 	}
+}
+
+// 获取当前登录用户
+function getCurrentUser() {
+	const userStr = localStorage.getItem('user');
+	return userStr ? JSON.parse(userStr) : null;
 }
 
 // 初始化认证相关事件
@@ -108,6 +114,7 @@ function initAuth() {
 
 // 导出认证函数
 window.auth = {
+	initAuth,
 	updateNavAuth,
-	initAuth
+	getCurrentUser
 };

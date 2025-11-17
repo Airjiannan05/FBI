@@ -121,13 +121,20 @@ function initSell() {
 
 			const imageUrl = uploadData.url;
 
-			// 2. 创建商品
+			// 2. 获取当前用户
+			const user = window.auth.getCurrentUser();
+			if (!user) {
+				throw new Error('请先登录');
+			}
+
+			// 3. 创建商品
 			const productData = await window.api.createProduct({
 				name,
 				description,
 				price,
 				stock,
-				image_url: imageUrl
+				image_url: imageUrl,
+				user_id: user.id
 			});
 
 			if (productData.message === '商品创建成功' || productData.id) {
@@ -135,13 +142,18 @@ function initSell() {
 				sellSuccess.style.display = 'block';
 				window.utils.showToast('商品发布成功！', 3000);
 				
-				// 2秒后关闭弹窗并刷新商品列表
+				// 2秒后关闭弹窗并刷新商品管理页面
 				setTimeout(() => {
 					document.getElementById('sell-modal').style.display = 'none';
 					document.getElementById('sell-form').reset();
 					selectedImageFile = null;
 					document.getElementById('sell-image-preview').innerHTML = '';
-					window.products.showProductList();
+					// 如果当前在商品管理页面，刷新列表
+					if (window.productManage && typeof window.productManage.loadMyProducts === 'function') {
+						window.productManage.loadMyProducts();
+					} else {
+						window.products.showProductList();
+					}
 				}, 2000);
 			} else {
 				throw new Error(productData.message || '商品创建失败');

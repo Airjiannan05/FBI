@@ -31,9 +31,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		window.orders.showOrders();
 	};
 	
-	document.getElementById('nav-sell').onclick = () => {
+	document.getElementById('nav-manage').onclick = () => {
+		console.log('🔧 点击了商品管理按钮');
+		console.log('window.productManage =', window.productManage);
 		if (heroSection) heroSection.style.display = 'none';
-		window.sell.showSellModal();
+		if (window.productManage && window.productManage.showMyProducts) {
+			window.productManage.showMyProducts();
+		} else {
+			console.error('❌ window.productManage.showMyProducts 不存在!');
+		}
 	};
 
 	// Hero区域"开始浏览"按钮点击事件

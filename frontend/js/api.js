@@ -24,6 +24,29 @@ async function createProduct(productData) {
 	return await res.json();
 }
 
+async function fetchMyProducts() {
+	const user = JSON.parse(localStorage.getItem('user') || 'null');
+	if (!user) return { products: [] };
+	const res = await fetch(`/api/product/my?user_id=${user.id}`);
+	return await res.json();
+}
+
+async function updateProduct(productId, productData) {
+	const res = await fetch(`/api/product/${productId}`, {
+		method: 'PUT',
+		headers: { 'Content-Type': 'application/json' },
+		body: JSON.stringify(productData)
+	});
+	return await res.json();
+}
+
+async function deleteProduct(productId) {
+	const res = await fetch(`/api/product/${productId}`, {
+		method: 'DELETE'
+	});
+	return await res.json();
+}
+
 // ========== 订单相关API ========== //
 async function fetchOrders() {
 	const user = JSON.parse(localStorage.getItem('user') || 'null');
@@ -125,6 +148,9 @@ window.api = {
 	fetchProducts,
 	fetchProductDetail,
 	createProduct,
+	fetchMyProducts,
+	updateProduct,
+	deleteProduct,
 	fetchOrders,
 	fetchOrderDetail,
 	createOrder,

@@ -2,10 +2,14 @@
 
 // 显示商品列表页
 async function showProductList(searchKeyword = '') {
+	console.log('🛍️ 调用 showProductList() - 显示所有商品列表');
 	const main = document.getElementById('main-content');
 	main.innerHTML = `
 		<div class="container">
-			<h2 style="font-family: Orbitron, sans-serif; font-size: 2.5rem; margin-bottom: 30px; text-align: center;" class="gradient-text">精选商品</h2>
+			<div style="text-align: center; margin-bottom: 30px;">
+				<h2 style="font-family: Orbitron, sans-serif; font-size: 2.5rem; margin-bottom: 10px;" class="gradient-text">🛍️ 精选商品</h2>
+				<p style="color: var(--color-text-muted); font-size: 1rem;">浏览所有商品，发现你喜欢的商品</p>
+			</div>
 			
 			<!-- 搜索框 -->
 			<div class="search-container">

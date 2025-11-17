@@ -55,20 +55,43 @@ exports.detail = async (req, res) => {
  * @param {number} price
  * @param {number} stock
  * @param {string} image_url
+ * @param {number} user_id - 发布者用户ID
  */
 exports.create = async (req, res) => {
-  const { name, description, price, stock, image_url } = req.body;
+  const { name, description, price, stock, image_url, user_id } = req.body;
   if (!name || !price) {
     return res.status(400).json({ message: '商品名和价格必填' });
   }
   try {
-    await pool.query(
-      'INSERT INTO products (name, description, price, stock, image_url) VALUES (?, ?, ?, ?, ?)',
-      [name, description || '', price, stock || 0, image_url || '']
+    const [result] = await pool.query(
+      'INSERT INTO products (name, description, price, stock, image_url, user_id) VALUES (?, ?, ?, ?, ?, ?)',
+      [name, description || '', price, stock || 0, image_url || '', user_id || null]
     );
-    res.json({ message: '商品添加成功' });
+    res.json({ message: '商品创建成功', id: result.insertId });
   } catch (err) {
     res.status(500).json({ message: '商品添加失败', error: err.message });
+  }
+};
+
+/**
+ * 查询用户的商品列表
+ * @route GET /api/product/my
+ * @query {number} user_id - 用户ID
+ * @returns {Array} products 用户发布的商品数组
+ */
+exports.myProducts = async (req, res) => {
+  const { user_id } = req.query;
+  if (!user_id) {
+    return res.status(400).json({ message: '缺少用户ID' });
+  }
+  try {
+    const [products] = await pool.query(
+      'SELECT * FROM products WHERE user_id = ? ORDER BY created_at DESC',
+      [user_id]
+    );
+    res.json({ products });
+  } catch (err) {
+    res.status(500).json({ message: '查询商品失败', error: err.message });
   }
 };
 
@@ -86,10 +109,39 @@ exports.update = async (req, res) => {
   const { id } = req.params;
   const { name, description, price, stock, image_url } = req.body;
   try {
-    const [result] = await pool.query(
-      'UPDATE products SET name=?, description=?, price=?, stock=?, image_url=? WHERE id=?',
-      [name, description, price, stock, image_url, id]
-    );
+    // 构建动态更新语句（只更新提供的字段）
+    let updateFields = [];
+    let updateValues = [];
+    
+    if (name !== undefined) {
+      updateFields.push('name=?');
+      updateValues.push(name);
+    }
+    if (description !== undefined) {
+      updateFields.push('description=?');
+      updateValues.push(description);
+    }
+    if (price !== undefined) {
+      updateFields.push('price=?');
+      updateValues.push(price);
+    }
+    if (stock !== undefined) {
+      updateFields.push('stock=?');
+      updateValues.push(stock);
+    }
+    if (image_url !== undefined) {
+      updateFields.push('image_url=?');
+      updateValues.push(image_url);
+    }
+    
+    if (updateFields.length === 0) {
+      return res.status(400).json({ message: '没有要更新的字段' });
+    }
+    
+    updateValues.push(id);
+    const sql = `UPDATE products SET ${updateFields.join(', ')} WHERE id=?`;
+    
+    const [result] = await pool.query(sql, updateValues);
     if (result.affectedRows === 0) {
       return res.status(404).json({ message: '商品不存在' });
     }

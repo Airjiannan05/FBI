@@ -20,6 +20,7 @@
   <script src="js/cartPage.js"></script>
   <script src="js/orders.js"></script>
   <script src="js/sell.js"></script>
+  <script src="js/productManage.js"></script>
   <script src="js/app.js"></script>
 </head>
 <body>
@@ -39,7 +40,7 @@
         <a href="#" id="nav-products" class="nav-link"><span>商品</span></a>
         <a href="#" id="nav-cart" class="nav-link"><span>购物车</span></a>
         <a href="#" id="nav-orders" class="nav-link"><span>订单</span></a>
-        <a href="#" id="nav-sell" class="nav-link" style="display:none;"><span>发布商品</span></a>
+        <a href="#" id="nav-manage" class="nav-link" style="display:none;"><span>商品管理</span></a>
         <a href="#" id="nav-login" class="nav-link neon-btn"><span>登录</span></a>
         <a href="#" id="nav-register" class="nav-link neon-btn"><span>注册</span></a>
         <a href="#" id="nav-logout" class="nav-link neon-btn" style="display:none;"><span>注销</span></a>
@@ -142,6 +143,35 @@
         <button type="submit" style="width: 100%;">发布商品</button>
         <div class="form-error" id="sell-error"></div>
         <div class="form-success" id="sell-success" style="color: #10b981; margin-top: 10px; display: none;"></div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 编辑商品弹窗 -->
+  <div id="edit-product-modal" class="modal" style="display:none;">
+    <div class="modal-content qq-modal" style="max-width: 600px;">
+      <span class="close" id="close-edit-product">&times;</span>
+      <div class="qq-logo">✏️</div>
+      <h2 class="qq-title">编辑商品</h2>
+      <form id="edit-product-form">
+        <input type="hidden" id="edit-product-id">
+        <input type="text" id="edit-name" placeholder="商品名称" required><br>
+        <textarea id="edit-description" placeholder="商品描述" rows="3" style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(0,0,0,0.3); color: #f1f5f9; font-family: inherit; margin-bottom: 15px; resize: vertical;" required></textarea>
+        <input type="number" id="edit-price" placeholder="价格" step="0.01" min="0.01" required><br>
+        <input type="number" id="edit-stock" placeholder="库存数量" min="0" required><br>
+        
+        <div class="upload-area-small" id="edit-upload-area" style="margin: 15px 0; padding: 30px; border: 2px dashed #1e90ff; border-radius: 12px; text-align: center; cursor: pointer; transition: all 0.3s;">
+          <div style="font-size: 2rem; margin-bottom: 10px;">📸</div>
+          <div style="color: #94a3b8; margin-bottom: 5px;">点击或拖拽更换商品图片</div>
+          <div style="color: #64748b; font-size: 0.85rem;">（可选）支持 JPG、PNG、GIF、WEBP，最大 5MB</div>
+        </div>
+        <input type="file" id="edit-image" accept="image/*" style="display:none;">
+        
+        <div id="edit-image-preview" style="margin: 15px 0; text-align: center;"></div>
+        
+        <button type="submit" style="width: 100%;">保存修改</button>
+        <div class="form-error" id="edit-error"></div>
+        <div class="form-success" id="edit-success" style="color: #10b981; margin-top: 10px; display: none;"></div>
       </form>
     </div>
   </div>
