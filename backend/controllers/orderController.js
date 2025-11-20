@@ -48,10 +48,17 @@ exports.create = async (req, res) => {
     
     // 3. 插入订单商品明细并扣减库存
     for (const item of items) {
-      // 插入订单商品明细
+      // 获取商品的卖家ID
+      const [product] = await conn.query(
+        'SELECT user_id FROM products WHERE id = ?',
+        [item.product_id]
+      );
+      const sellerId = product[0]?.user_id || null;
+      
+      // 插入订单商品明细(包含seller_id)
       await conn.query(
-        'INSERT INTO order_items (order_id, product_id, quantity, price) VALUES (?, ?, ?, ?)',
-        [orderId, item.product_id, item.quantity, item.price]
+        'INSERT INTO order_items (order_id, product_id, seller_id, quantity, price) VALUES (?, ?, ?, ?, ?)',
+        [orderId, item.product_id, sellerId, item.quantity, item.price]
       );
       
       // 扣减商品库存

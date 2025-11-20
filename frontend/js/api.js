@@ -154,7 +154,8 @@ async function fetchSellerOrders(status = '', startDate = '', endDate = '') {
 	if (endDate) url += `&end_date=${endDate}`;
 	
 	const res = await fetch(url);
-	return (await res.json()).orders || [];
+	const data = await res.json();
+	return data.orders || [];
 }
 
 async function fetchSalesStatistics(period = 'month') {

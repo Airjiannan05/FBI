@@ -25,7 +25,6 @@ exports.getSellerOrders = async (req, res) => {
         o.status,
         o.payment_method,
         o.payment_time,
-        o.shipping_address,
         o.tracking_number,
         o.carrier,
         o.shipped_at,
@@ -34,9 +33,8 @@ exports.getSellerOrders = async (req, res) => {
         u.email as buyer_email
       FROM orders o
       INNER JOIN order_items oi ON o.id = oi.order_id
-      INNER JOIN products p ON oi.product_id = p.id
       LEFT JOIN users u ON o.user_id = u.id
-      WHERE p.user_id = ?
+      WHERE oi.seller_id = ?
     `;
     let params = [seller_id];
     
@@ -60,13 +58,13 @@ exports.getSellerOrders = async (req, res) => {
     
     const [orders] = await pool.query(sql, params);
     
-    // 为每个订单获取商品明细
+    // 为每个订单获取商品明细(只返回属于该卖家的商品项)
     for (let order of orders) {
       const [items] = await pool.query(
         `SELECT oi.*, p.name, p.image_url 
          FROM order_items oi 
          JOIN products p ON oi.product_id = p.id 
-         WHERE oi.order_id = ? AND p.user_id = ?`,
+         WHERE oi.order_id = ? AND oi.seller_id = ?`,
         [order.id, seller_id]
       );
       order.items = items;
@@ -102,8 +100,7 @@ exports.getSalesStatistics = async (req, res) => {
         COALESCE(SUM(oi.quantity), 0) as total_items_sold
        FROM orders o
        INNER JOIN order_items oi ON o.id = oi.order_id
-       INNER JOIN products p ON oi.product_id = p.id
-       WHERE p.user_id = ? AND o.status IN ('已支付', '已发货', '已完成')`,
+       WHERE oi.seller_id = ? AND o.status IN ('已支付', '已发货', '已完成')`,
       [seller_id]
     );
     
@@ -115,8 +112,7 @@ exports.getSalesStatistics = async (req, res) => {
         COALESCE(SUM(oi.quantity * oi.price), 0) as amount
        FROM orders o
        INNER JOIN order_items oi ON o.id = oi.order_id
-       INNER JOIN products p ON oi.product_id = p.id
-       WHERE p.user_id = ?
+       WHERE oi.seller_id = ?
        GROUP BY o.status`,
       [seller_id]
     );
@@ -155,8 +151,7 @@ exports.getSalesStatistics = async (req, res) => {
         COALESCE(SUM(oi.quantity), 0) as items_sold
        FROM orders o
        INNER JOIN order_items oi ON o.id = oi.order_id
-       INNER JOIN products p ON oi.product_id = p.id
-       WHERE p.user_id = ? 
+       WHERE oi.seller_id = ? 
        AND o.status IN ('已支付', '已发货', '已完成')
        AND o.created_at >= DATE_SUB(NOW(), ${dateInterval})
        GROUP BY DATE_FORMAT(o.created_at, '${dateFormat}')
@@ -176,7 +171,7 @@ exports.getSalesStatistics = async (req, res) => {
        FROM products p
        INNER JOIN order_items oi ON p.id = oi.product_id
        INNER JOIN orders o ON oi.order_id = o.id
-       WHERE p.user_id = ? AND o.status IN ('已支付', '已发货', '已完成')
+       WHERE oi.seller_id = ? AND o.status IN ('已支付', '已发货', '已完成')
        GROUP BY p.id, p.name, p.image_url, p.price
        ORDER BY sold_count DESC
        LIMIT 10`,
@@ -191,8 +186,7 @@ exports.getSalesStatistics = async (req, res) => {
         COALESCE(SUM(oi.quantity * oi.price), 0) as sales_amount
        FROM orders o
        INNER JOIN order_items oi ON o.id = oi.order_id
-       INNER JOIN products p ON oi.product_id = p.id
-       WHERE p.user_id = ? 
+       WHERE oi.seller_id = ? 
        AND o.status IN ('已支付', '已发货', '已完成')
        AND o.created_at >= DATE_SUB(CURDATE(), INTERVAL 7 DAY)
        GROUP BY DATE_FORMAT(o.created_at, '%Y-%m-%d')
