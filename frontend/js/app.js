@@ -41,6 +41,11 @@ document.addEventListener('DOMContentLoaded', () => {
 			console.error('❌ window.productManage.showMyProducts 不存在!');
 		}
 	};
+	
+	document.getElementById('nav-sales').onclick = () => {
+		if (heroSection) heroSection.style.display = 'none';
+		window.sales.showSalesStatistics();
+	};
 
 	// Hero区域"开始浏览"按钮点击事件
 	const heroCta = document.querySelector('.hero-cta');

@@ -143,6 +143,36 @@ async function uploadImage(file, folder = 'products') {
 	return await res.json();
 }
 
+// ========== 销售统计相关API ========== //
+async function fetchSellerOrders(status = '', startDate = '', endDate = '') {
+	const user = JSON.parse(localStorage.getItem('user') || 'null');
+	if (!user) return [];
+	
+	let url = `/api/sales/orders?seller_id=${user.id}`;
+	if (status) url += `&status=${status}`;
+	if (startDate) url += `&start_date=${startDate}`;
+	if (endDate) url += `&end_date=${endDate}`;
+	
+	const res = await fetch(url);
+	return (await res.json()).orders || [];
+}
+
+async function fetchSalesStatistics(period = 'month') {
+	const user = JSON.parse(localStorage.getItem('user') || 'null');
+	if (!user) return {};
+	
+	const res = await fetch(`/api/sales/statistics?seller_id=${user.id}&period=${period}`);
+	return await res.json();
+}
+
+async function fetchProductSalesDetail(productId) {
+	const user = JSON.parse(localStorage.getItem('user') || 'null');
+	if (!user) return {};
+	
+	const res = await fetch(`/api/sales/product/${productId}?seller_id=${user.id}`);
+	return await res.json();
+}
+
 // 导出API函数
 window.api = {
 	fetchProducts,
@@ -160,5 +190,8 @@ window.api = {
 	loginUser,
 	logoutUser,
 	getProfile,
-	uploadImage
+	uploadImage,
+	fetchSellerOrders,
+	fetchSalesStatistics,
+	fetchProductSalesDetail
 };

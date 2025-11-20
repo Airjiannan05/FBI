@@ -7,11 +7,13 @@ function updateNavAuth() {
 		document.getElementById('nav-register').style.display = 'none';
 		document.getElementById('nav-logout').style.display = '';
 		document.getElementById('nav-manage').style.display = '';
+		document.getElementById('nav-sales').style.display = '';
 	} else {
 		document.getElementById('nav-login').style.display = '';
 		document.getElementById('nav-register').style.display = '';
 		document.getElementById('nav-logout').style.display = 'none';
 		document.getElementById('nav-manage').style.display = 'none';
+		document.getElementById('nav-sales').style.display = 'none';
 	}
 }
 
