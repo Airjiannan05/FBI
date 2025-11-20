@@ -144,25 +144,39 @@ async function loadOverviewTab() {
 	}
 }
 
-// 渲染趋势图（简单的条形图）
+// 渲染趋势柱状图
 function renderTrendChart(data) {
 	if (data.length === 0) return '<p style="text-align: center; color: var(--color-text-muted);">暂无数据</p>';
 	
 	const maxAmount = Math.max(...data.map(d => parseFloat(d.sales_amount)));
 	
 	return `
-		<div class="chart-container">
-			${data.map(d => `
-				<div class="chart-bar-group">
-					<div class="chart-label">${d.date}</div>
-					<div class="chart-bar">
-						<div class="chart-bar-fill" style="width: ${(d.sales_amount / maxAmount * 100).toFixed(0)}%">
-							<span class="chart-value">￥${parseFloat(d.sales_amount).toFixed(0)}</span>
+		<div class="bar-chart-container">
+			<div class="bar-chart-layer">
+				${data.map((d, index) => {
+					const heightPercent = (parseFloat(d.sales_amount) / maxAmount * 100);
+					const leftPercent = (index / data.length) * 100;
+					const widthPercent = 100 / data.length;
+					return `
+						<div class="chart-bar-wrapper" style="left: ${leftPercent}%; width: ${widthPercent}%;">
+							<div class="chart-bar-column" style="height: ${heightPercent}%;">
+								<div class="bar-value">￥${parseFloat(d.sales_amount).toFixed(0)}</div>
+							</div>
 						</div>
+					`;
+				}).join('')}
+			</div>
+			
+			<!-- X轴标签 -->
+			<div class="chart-x-labels">
+				${data.map((d, index) => `
+					<div class="x-label-item" style="left: ${(index / data.length) * 100}%; width: ${100/data.length}%;">
+						<div class="label-date">${d.date}</div>
+						<div class="label-amount">￥${parseFloat(d.sales_amount).toFixed(0)}</div>
+						<div class="label-count">${d.order_count}单</div>
 					</div>
-					<div class="chart-count">${d.order_count}单</div>
-				</div>
-			`).join('')}
+				`).join('')}
+			</div>
 		</div>
 	`;
 }

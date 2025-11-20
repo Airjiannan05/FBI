@@ -1851,6 +1851,101 @@ button[type="submit"] {
   font-size: 0.9rem;
 }
 
+/* 柱状图容器 */
+.bar-chart-container {
+  position: relative;
+  width: 100%;
+  height: 300px;
+  padding: 10px 0;
+}
+
+/* 柱状图层 */
+.bar-chart-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 250px;
+  display: flex;
+  align-items: flex-end;
+  z-index: 1;
+}
+
+.chart-bar-wrapper {
+  position: absolute;
+  height: 100%;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+  padding: 0 2px;
+}
+
+.chart-bar-column {
+  width: 100%;
+  max-width: 40px;
+  background: linear-gradient(180deg, rgba(16, 185, 129, 0.8), rgba(16, 185, 129, 0.4));
+  border-radius: 8px 8px 0 0;
+  position: relative;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.chart-bar-column:hover {
+  background: linear-gradient(180deg, rgba(59, 130, 246, 0.9), rgba(59, 130, 246, 0.5));
+  transform: translateY(-3px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+.bar-value {
+  position: absolute;
+  top: -25px;
+  left: 50%;
+  transform: translateX(-50%);
+  color: var(--color-primary);
+  font-weight: 600;
+  font-size: 0.85rem;
+  font-family: 'Orbitron', sans-serif;
+  white-space: nowrap;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+}
+
+.chart-bar-column:hover .bar-value {
+  opacity: 1;
+}
+
+/* X轴标签 */
+.chart-x-labels {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  display: flex;
+}
+
+.x-label-item {
+  position: absolute;
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2px;
+}
+
+.label-date {
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  white-space: nowrap;
+}
+
+.label-count {
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  opacity: 0.7;
+}
+
+/* 旧的条形图样式(保留以备用) */
 .chart-container {
   display: flex;
   flex-direction: column;
