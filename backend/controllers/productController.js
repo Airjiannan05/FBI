@@ -152,19 +152,46 @@ exports.update = async (req, res) => {
 };
 
 /**
- * 删除商品
+ * 删除商品（改进版 - 检查订单关联）
  * @route DELETE /api/product/:id
  * @param {number} id 商品ID
  */
 exports.remove = async (req, res) => {
   const { id } = req.params;
+  const connection = await pool.getConnection();
+  
   try {
-    const [result] = await pool.query('DELETE FROM products WHERE id = ?', [id]);
+    await connection.beginTransaction();
+    
+    // 1. 检查是否有关联的订单
+    const [orderItems] = await connection.query(
+      'SELECT COUNT(*) as count FROM order_items WHERE product_id = ?',
+      [id]
+    );
+    
+    if (orderItems[0].count > 0) {
+      // 如果有关联订单，不允许删除，返回友好提示
+      await connection.rollback();
+      return res.status(400).json({ 
+        message: `该商品已有 ${orderItems[0].count} 笔订单记录，无法删除。建议将库存设为0以停止销售。`
+      });
+    }
+    
+    // 2. 如果没有关联订单，执行删除
+    const [result] = await connection.query('DELETE FROM products WHERE id = ?', [id]);
+    
     if (result.affectedRows === 0) {
+      await connection.rollback();
       return res.status(404).json({ message: '商品不存在' });
     }
+    
+    await connection.commit();
     res.json({ message: '商品删除成功' });
+    
   } catch (err) {
+    await connection.rollback();
     res.status(500).json({ message: '商品删除失败', error: err.message });
+  } finally {
+    connection.release();
   }
 };
