@@ -47,6 +47,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		window.sales.showSalesStatistics();
 	};
 
+	document.getElementById('nav-admin').onclick = () => {
+		if (heroSection) heroSection.style.display = 'none';
+		if (window.admin && window.admin.showAdminPanel) {
+			window.admin.showAdminPanel();
+		} else {
+			console.error('❌ window.admin.showAdminPanel 不存在!');
+		}
+	};
+
 	// Hero区域"开始浏览"按钮点击事件
 	const heroCta = document.querySelector('.hero-cta');
 	if (heroCta) {

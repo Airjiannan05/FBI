@@ -1,8 +1,8 @@
 const bcrypt = require('bcrypt');
 const jwt = require('jsonwebtoken');
 const pool = require('../config/db');
+const { JWT_SECRET } = require('../middleware/auth');
 
-const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
 
 /**
  * 用户注册接口
@@ -13,10 +13,14 @@ const JWT_SECRET = process.env.JWT_SECRET || 'default_secret';
  */
 
 exports.register = async (req, res) => {
-  const { username, password, email } = req.body;
+  const { username, password, email, role } = req.body;
   if (!username || !password || !email) {
     return res.status(400).json({ message: '参数不完整' });
   }
+  // 验证角色合法性
+  const validRoles = ['buyer', 'seller', 'admin'];
+  const userRole = validRoles.includes(role) ? role : 'buyer';
+  
   try {
     // 检查用户名或邮箱是否已存在
     const [users] = await pool.query('SELECT id FROM users WHERE username = ? OR email = ?', [username, email]);
@@ -25,7 +29,10 @@ exports.register = async (req, res) => {
     }
     // 密码加密
     const hash = await bcrypt.hash(password, 10);
-    await pool.query('INSERT INTO users (username, password, email) VALUES (?, ?, ?)', [username, hash, email]);
+    await pool.query(
+      'INSERT INTO users (username, password, email, role) VALUES (?, ?, ?, ?)',
+      [username, hash, email, userRole]
+    );
     res.json({ message: '注册成功' });
   } catch (err) {
     res.status(500).json({ message: '注册失败', error: err.message });
@@ -42,6 +49,7 @@ exports.register = async (req, res) => {
 
 exports.login = async (req, res) => {
   const { username, password } = req.body;
+  const pool = require('../config/db');
   if (!username || !password) {
     return res.status(400).json({ message: '参数不完整' });
   }
@@ -57,9 +65,26 @@ exports.login = async (req, res) => {
     if (!match) {
       return res.status(401).json({ message: '用户名或密码错误' });
     }
-    // 生成JWT
-    const token = jwt.sign({ id: user.id, username: user.username }, JWT_SECRET, { expiresIn: '2h' });
-    res.json({ message: '登录成功', token, user: { id: user.id, username: user.username, email: user.email } });
+    // 生成JWT（包含角色信息）
+    const token = jwt.sign(
+      { id: user.id, username: user.username, role: user.role || 'buyer' },
+      JWT_SECRET,
+      { expiresIn: '2h' }
+    );
+    
+    // 记录登录日志
+    const loginIp = req.ip || req.connection.remoteAddress || 'unknown';
+    const userAgent = req.headers['user-agent'] || '';
+    pool.query(
+      'INSERT INTO user_logs (user_id, login_time, ip_address, user_agent, action) VALUES (?, NOW(), ?, ?, ?)',
+      [user.id, loginIp, userAgent, 'login']
+    ).catch(err => console.error('记录登录日志失败:', err.message));
+    
+    res.json({
+      message: '登录成功',
+      token,
+      user: { id: user.id, username: user.username, email: user.email, role: user.role || 'buyer' }
+    });
   } catch (err) {
     res.status(500).json({ message: '登录失败', error: err.message });
   }

@@ -13,3 +13,14 @@ Thumbs.db
 
 # 忽略构建文件
 package-lock.json
+
+#忽略文档
+doc/
+
+# 忽略计划文件
+plans/
+
+# 忽略数据库文件
+.sql
+
+.pdf

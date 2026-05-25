@@ -1537,6 +1537,55 @@ button[type="submit"] {
   font-weight: 500;
 }
 
+/* ========== 注册角色选择样式 ========== */
+.role-options {
+  display: flex;
+  gap: 12px;
+}
+
+.role-option {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 12px;
+  border: 2px solid rgba(148, 163, 184, 0.2);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.3s;
+  color: var(--color-text);
+  background: rgba(15, 23, 42, 0.3);
+}
+
+.role-option:hover {
+  border-color: var(--color-primary);
+  background: rgba(30, 144, 255, 0.05);
+}
+
+.role-option:has(input:checked) {
+  border-color: var(--color-primary);
+  background: rgba(30, 144, 255, 0.1);
+  box-shadow: 0 0 15px rgba(30, 144, 255, 0.2);
+}
+
+.role-option:has(input[value="seller"]:checked) {
+  border-color: var(--color-secondary);
+  background: rgba(168, 85, 247, 0.1);
+  box-shadow: 0 0 15px rgba(168, 85, 247, 0.2);
+}
+
+.role-option:has(input[value="admin"]:checked) {
+  border-color: var(--color-accent);
+  background: rgba(236, 72, 153, 0.1);
+  box-shadow: 0 0 15px rgba(236, 72, 153, 0.2);
+}
+
+.role-option input[type="radio"] {
+  accent-color: var(--color-primary);
+  width: 18px;
+  height: 18px;
+}
+
 /* ========== 商品管理页面样式 ========== */
 
 .manage-table-wrapper {
@@ -2326,6 +2375,92 @@ button[type="submit"] {
   .sales-table {
     display: block;
     overflow-x: auto;
+  }
+  
+  .sales-tabs {
+    gap: 6px;
+  }
+  
+  .sales-tab {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .chart-container {
+    height: 250px !important;
+  }
+  
+  .prediction-chart-container {
+    min-height: 300px;
+  }
+  
+  .anomaly-card {
+    padding: 20px;
+  }
+  
+  .admin-sellers-table {
+    font-size: 0.85rem;
+  }
+  
+  .admin-sellers-table th,
+  .admin-sellers-table td {
+    padding: 8px 6px;
+  }
+  
+  .stats-section {
+    padding: 20px 15px;
+  }
+  
+  .stat-card {
+    padding: 18px;
+    gap: 12px;
+  }
+  
+  .stat-value {
+    font-size: 1.5rem;
+  }
+  
+  .stat-icon {
+    font-size: 2.2rem;
+  }
+  
+  .recommend-section {
+    padding: 20px 15px;
+  }
+  
+  .also-bought-section {
+    padding: 15px;
+  }
+}
+
+@media (max-width: 480px) {
+  .sales-tabs {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .sales-tab {
+    width: 100%;
+    text-align: center;
+  }
+  
+  .chart-container {
+    height: 200px !important;
+  }
+  
+  .stat-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 8px;
+  }
+  
+  .admin-sellers-table {
+    display: block;
+    overflow-x: auto;
+  }
+  
+  .recommend-list {
+    grid-template-columns: 1fr;
   }
 }
 

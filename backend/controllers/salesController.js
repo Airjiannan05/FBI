@@ -1,4 +1,6 @@
 const pool = require('../config/db');
+const { getSalesPrediction } = require('../services/predictionService');
+const { getSalesAnomalies } = require('../services/anomalyDetection');
 
 /**
  * 获取商家的销售订单列表
@@ -268,6 +270,84 @@ exports.getProductSalesDetail = async (req, res) => {
     });
   } catch (err) {
     res.status(500).json({ message: '获取商品销售详情失败', error: err.message });
+  }
+};
+
+// ========== 新增：预测、异常、排行榜 ==========
+
+/**
+ * 销售趋势预测
+ * @route GET /api/sales/prediction
+ * @query {number} seller_id - 商家ID
+ * @query {number} days - 历史天数（默认30）
+ */
+exports.getPrediction = async (req, res) => {
+  const { seller_id, days = 30 } = req.query;
+  try {
+    const result = await getSalesPrediction(seller_id || null, parseInt(days));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: '预测失败', error: err.message });
+  }
+};
+
+/**
+ * 销售异常检测
+ * @route GET /api/sales/anomalies
+ * @query {number} seller_id - 商家ID
+ * @query {number} days - 检测天数（默认30）
+ */
+exports.getAnomalies = async (req, res) => {
+  const { seller_id, days = 30 } = req.query;
+  try {
+    const result = await getSalesAnomalies(seller_id || null, parseInt(days));
+    res.json(result);
+  } catch (err) {
+    res.status(500).json({ message: '异常检测失败', error: err.message });
+  }
+};
+
+/**
+ * 商品销售排行榜
+ * @route GET /api/sales/ranking
+ * @query {string} type - sales|quantity（默认sales）
+ * @query {number} category_id - 按类别筛选（可选）
+ * @query {number} limit - 排行数量（默认20）
+ */
+exports.getRanking = async (req, res) => {
+  const { type = 'sales', category_id, limit = 20 } = req.query;
+  try {
+    let sql = `
+      SELECT p.id, p.name, p.price, p.image_url, p.stock,
+             c.name as category_name,
+             COALESCE(SUM(oi.quantity), 0) as sold_count,
+             COALESCE(SUM(oi.quantity * oi.price), 0) as sales_amount
+      FROM products p
+      LEFT JOIN categories c ON p.category_id = c.id
+      LEFT JOIN order_items oi ON p.id = oi.product_id
+      LEFT JOIN orders o ON oi.order_id = o.id AND o.status IN ('已支付', '已发货', '已完成')
+    `;
+    const params = [];
+    const conditions = [];
+    
+    if (category_id) {
+      conditions.push('p.category_id = ?');
+      params.push(category_id);
+    }
+    
+    if (conditions.length > 0) {
+      sql += ' WHERE ' + conditions.join(' AND ');
+    }
+    
+    sql += ` GROUP BY p.id, p.name, p.price, p.image_url, p.stock, c.name
+             ORDER BY ${type === 'quantity' ? 'sold_count' : 'sales_amount'} DESC
+             LIMIT ?`;
+    params.push(parseInt(limit));
+    
+    const [ranking] = await pool.query(sql, params);
+    res.json({ ranking });
+  } catch (err) {
+    res.status(500).json({ message: '获取排行榜失败', error: err.message });
   }
 };
 
