@@ -2,12 +2,28 @@
 
 let selectedImageFile = null;
 
+// 加载类别到下拉框
+async function loadSellCategories() {
+	try {
+		const categories = await window.api.fetchCategories();
+		const sellSelect = document.getElementById('sell-category');
+		const editSelect = document.getElementById('edit-category');
+		const optionsHtml = '<option value="">选择商品类别（可选）</option>' +
+			categories.map(c => `<option value="${c.id}">${c.name}</option>`).join('');
+		if (sellSelect) sellSelect.innerHTML = optionsHtml;
+		if (editSelect) editSelect.innerHTML = optionsHtml;
+	} catch (err) {
+		console.error('加载类别失败:', err);
+	}
+}
+
 // 显示发布商品弹窗
-function showSellModal() {
+async function showSellModal() {
 	const sellModal = document.getElementById('sell-modal');
 	sellModal.style.display = 'block';
 	document.getElementById('sell-error').textContent = '';
 	document.getElementById('sell-success').style.display = 'none';
+	await loadSellCategories();
 }
 
 // 图片预览
@@ -128,13 +144,15 @@ function initSell() {
 			}
 
 			// 3. 创建商品
+			const categoryId = document.getElementById('sell-category').value;
 			const productData = await window.api.createProduct({
 				name,
 				description,
 				price,
 				stock,
 				image_url: imageUrl,
-				user_id: user.id
+				user_id: user.id,
+				category_id: categoryId || null
 			});
 
 			if (productData.message === '商品创建成功' || productData.id) {

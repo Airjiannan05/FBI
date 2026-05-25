@@ -66,6 +66,7 @@ async function loadMyProducts() {
 						<tr>
 							<th style="width: 80px;">图片</th>
 							<th>商品名称</th>
+							<th style="width: 100px;">类别</th>
 							<th style="width: 120px;">价格</th>
 							<th style="width: 100px;">库存</th>
 							<th style="width: 150px;">创建时间</th>
@@ -76,8 +77,8 @@ async function loadMyProducts() {
 						${products.map(p => `
 							<tr>
 								<td>
-									<img src="${p.image_url || 'https://via.placeholder.com/80'}" 
-										 alt="${p.name}" 
+									<img src="${p.image_url || 'https://via.placeholder.com/80'}"
+										 alt="${p.name}"
 										 style="width: 60px; height: 60px; object-fit: cover; border-radius: 8px;">
 								</td>
 								<td>
@@ -85,6 +86,9 @@ async function loadMyProducts() {
 									<div style="color: var(--color-text-muted); font-size: 0.85rem; margin-top: 4px;">
 										${p.description ? (p.description.length > 50 ? p.description.substring(0, 50) + '...' : p.description) : '暂无描述'}
 									</div>
+								</td>
+								<td style="color: var(--color-text-muted); font-size: 0.9rem;">
+									${p.category_name ? `<span style="background: rgba(30,144,255,0.15); color: #60a5fa; padding: 2px 8px; border-radius: 12px; font-size: 0.8rem;">${p.category_name}</span>` : '<span style="color: #64748b;">-</span>'}
 								</td>
 								<td><span style="color: var(--color-primary); font-weight: 600;">￥${p.price}</span></td>
 								<td>
@@ -147,6 +151,16 @@ async function showEditModal(productId) {
 		document.getElementById('edit-description').value = product.description || '';
 		document.getElementById('edit-price').value = product.price;
 		document.getElementById('edit-stock').value = product.stock;
+		
+		// 加载类别下拉框并设置当前值
+		try {
+			const categories = await window.api.fetchCategories();
+			const editSelect = document.getElementById('edit-category');
+			editSelect.innerHTML = '<option value="">选择商品类别（可选）</option>' +
+				categories.map(c => `<option value="${c.id}" ${product.category_id == c.id ? 'selected' : ''}>${c.name}</option>`).join('');
+		} catch (e) {
+			console.error('加载类别失败:', e);
+		}
 		
 		// 清空之前的错误和成功信息
 		document.getElementById('edit-error').textContent = '';
@@ -280,11 +294,13 @@ function initEditModal() {
 			
 			// 更新商品
 			editSuccess.textContent = '正在更新商品...';
+			const categoryId = document.getElementById('edit-category').value;
 			const updateData = {
 				name,
 				description,
 				price,
-				stock
+				stock,
+				category_id: categoryId || null
 			};
 			
 			// 只有上传了新图片才更新图片URL

@@ -115,12 +115,42 @@ exports.profile = async (req, res) => {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     // 查询用户信息
-    const [users] = await pool.query('SELECT id, username, email, created_at FROM users WHERE id = ?', [decoded.id]);
+    const [users] = await pool.query('SELECT id, username, email, created_at, role FROM users WHERE id = ?', [decoded.id]);
     if (users.length === 0) {
       return res.status(404).json({ message: '用户不存在' });
     }
     res.json({ user: users[0] });
   } catch (err) {
     res.status(401).json({ message: 'token无效或已过期' });
+  }
+};
+
+/**
+ * 获取用户登录日志
+ * @route GET /api/user/login-logs?userId=&page=1&limit=20
+ */
+exports.loginLogs = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = (page - 1) * limit;
+    const userId = req.query.userId || req.user.id;
+
+    // 只有管理员/销售可以查看他人日志，普通用户只能看自己的
+    if (req.user.role === 'buyer' && parseInt(userId) !== req.user.id) {
+      return res.status(403).json({ message: '无权查看他人登录日志' });
+    }
+
+    const [rows] = await pool.query(
+      'SELECT id, user_id, login_time, ip_address, user_agent, action FROM user_logs WHERE user_id = ? ORDER BY login_time DESC LIMIT ? OFFSET ?',
+      [userId, limit, offset]
+    );
+    const [[{ total }]] = await pool.query(
+      'SELECT COUNT(*) AS total FROM user_logs WHERE user_id = ?',
+      [userId]
+    );
+    res.json({ logs: rows, total, page, limit });
+  } catch (err) {
+    res.status(500).json({ message: '查询登录日志失败', error: err.message });
   }
 };

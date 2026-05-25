@@ -9,17 +9,18 @@ const pool = require('../config/db');
 exports.list = async (req, res) => {
   try {
     const { search } = req.query;
-    let query = 'SELECT * FROM products';
+    let query = `SELECT p.*, c.name AS category_name FROM products p
+                 LEFT JOIN categories c ON p.category_id = c.id`;
     let params = [];
     
     // 如果有搜索关键词，添加搜索条件
     if (search && search.trim()) {
-      query += ' WHERE name LIKE ? OR description LIKE ?';
+      query += ' WHERE p.name LIKE ? OR p.description LIKE ?';
       const searchPattern = `%${search.trim()}%`;
       params = [searchPattern, searchPattern];
     }
     
-    query += ' ORDER BY created_at DESC';
+    query += ' ORDER BY p.created_at DESC';
     
     const [products] = await pool.query(query, params);
     res.json({ products, search: search || '' });
@@ -37,7 +38,11 @@ exports.list = async (req, res) => {
 exports.detail = async (req, res) => {
   const { id } = req.params;
   try {
-    const [products] = await pool.query('SELECT * FROM products WHERE id = ?', [id]);
+    const [products] = await pool.query(
+      `SELECT p.*, c.name AS category_name FROM products p
+       LEFT JOIN categories c ON p.category_id = c.id
+       WHERE p.id = ?`, [id]
+    );
     if (products.length === 0) {
       return res.status(404).json({ message: '商品不存在' });
     }
@@ -56,16 +61,17 @@ exports.detail = async (req, res) => {
  * @param {number} stock
  * @param {string} image_url
  * @param {number} user_id - 发布者用户ID
+ * @param {number} category_id - 类别ID（可选）
  */
 exports.create = async (req, res) => {
-  const { name, description, price, stock, image_url, user_id } = req.body;
+  const { name, description, price, stock, image_url, user_id, category_id } = req.body;
   if (!name || !price) {
     return res.status(400).json({ message: '商品名和价格必填' });
   }
   try {
     const [result] = await pool.query(
-      'INSERT INTO products (name, description, price, stock, image_url, user_id) VALUES (?, ?, ?, ?, ?, ?)',
-      [name, description || '', price, stock || 0, image_url || '', user_id || null]
+      'INSERT INTO products (name, description, price, stock, image_url, user_id, category_id) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [name, description || '', price, stock || 0, image_url || '', user_id || null, category_id || null]
     );
     res.json({ message: '商品创建成功', id: result.insertId });
   } catch (err) {
@@ -86,7 +92,9 @@ exports.myProducts = async (req, res) => {
   }
   try {
     const [products] = await pool.query(
-      'SELECT * FROM products WHERE user_id = ? ORDER BY created_at DESC',
+      `SELECT p.*, c.name AS category_name FROM products p
+       LEFT JOIN categories c ON p.category_id = c.id
+       WHERE p.user_id = ? ORDER BY p.created_at DESC`,
       [user_id]
     );
     res.json({ products });
@@ -104,10 +112,11 @@ exports.myProducts = async (req, res) => {
  * @param {number} price
  * @param {number} stock
  * @param {string} image_url
+ * @param {number} category_id - 类别ID（可选）
  */
 exports.update = async (req, res) => {
   const { id } = req.params;
-  const { name, description, price, stock, image_url } = req.body;
+  const { name, description, price, stock, image_url, category_id } = req.body;
   try {
     // 构建动态更新语句（只更新提供的字段）
     let updateFields = [];
@@ -132,6 +141,10 @@ exports.update = async (req, res) => {
     if (image_url !== undefined) {
       updateFields.push('image_url=?');
       updateValues.push(image_url);
+    }
+    if (category_id !== undefined) {
+      updateFields.push('category_id=?');
+      updateValues.push(category_id || null);
     }
     
     if (updateFields.length === 0) {

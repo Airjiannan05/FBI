@@ -352,6 +352,56 @@ async function fetchAdminTrend(period = 'day', days = 30) {
   return await res.json();
 }
 
+// 浏览日志
+async function fetchBrowseLogs({ page = 1, limit = 20, userId = '', productId = '' } = {}) {
+  const params = new URLSearchParams({ page, limit });
+  if (userId) params.set('userId', userId);
+  if (productId) params.set('productId', productId);
+  const res = await fetch('/api/analytics/browse-logs?' + params, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  return await res.json();
+}
+
+// 购买日志
+async function fetchPurchaseLogs({ page = 1, limit = 20, userId = '', status = '' } = {}) {
+  const params = new URLSearchParams({ page, limit });
+  if (userId) params.set('userId', userId);
+  if (status) params.set('status', status);
+  const res = await fetch('/api/analytics/purchase-logs?' + params, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  return await res.json();
+}
+
+// 用户列表
+async function fetchUsers(search = '') {
+  const params = new URLSearchParams();
+  if (search) params.set('search', search);
+  const res = await fetch('/api/analytics/users?' + params, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  return await res.json();
+}
+
+// 用户画像
+async function fetchUserProfile(userId) {
+  const res = await fetch('/api/analytics/profile/' + userId, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  return await res.json();
+}
+
+// 登录日志
+async function fetchLoginLogs({ userId, page = 1, limit = 20 } = {}) {
+  const params = new URLSearchParams({ page, limit });
+  if (userId) params.set('userId', userId);
+  const res = await fetch('/api/user/login-logs?' + params, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  return await res.json();
+}
+
 // 导出API函数
 window.api = {
   fetchProducts,
@@ -389,5 +439,10 @@ window.api = {
   removeSeller,
   resetPassword,
   fetchAdminOverview,
-  fetchAdminTrend
+  fetchAdminTrend,
+  fetchBrowseLogs,
+  fetchPurchaseLogs,
+  fetchUsers,
+  fetchUserProfile,
+  fetchLoginLogs
 };

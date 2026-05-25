@@ -197,14 +197,126 @@ async function generateUserProfile(userId) {
 }
 
 /**
+ * 获取浏览日志（销售人员可查所有用户浏览记录）
+ * @route GET /api/analytics/browse-logs?page=1&limit=20&userId=&productId=
+ */
+exports.getBrowseLogs = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = (page - 1) * limit;
+    const { userId, productId } = req.query;
+
+    let where = 'WHERE 1=1';
+    const params = [];
+    if (userId) { where += ' AND bh.user_id = ?'; params.push(userId); }
+    if (productId) { where += ' AND bh.product_id = ?'; params.push(productId); }
+
+    const [rows] = await pool.query(
+      `SELECT bh.id, bh.user_id, u.username, bh.product_id, p.name AS product_name,
+              bh.category_id, c.name AS category_name, bh.start_time, bh.duration_seconds, bh.ip_address
+       FROM browse_history bh
+       LEFT JOIN users u ON bh.user_id = u.id
+       LEFT JOIN products p ON bh.product_id = p.id
+       LEFT JOIN categories c ON bh.category_id = c.id
+       ${where}
+       ORDER BY bh.start_time DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) AS total FROM browse_history bh ${where}`, params
+    );
+
+    res.json({ logs: rows, total, page, limit });
+  } catch (err) {
+    res.status(500).json({ message: '查询失败', error: err.message });
+  }
+};
+
+/**
+ * 获取购买日志（订单记录，销售人员可查）
+ * @route GET /api/analytics/purchase-logs?page=1&limit=20&userId=&status=
+ */
+exports.getPurchaseLogs = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = (page - 1) * limit;
+    const { userId, status, sellerId } = req.query;
+
+    let where = 'WHERE 1=1';
+    const params = [];
+    if (userId) { where += ' AND o.user_id = ?'; params.push(userId); }
+    if (status) { where += ' AND o.status = ?'; params.push(status); }
+    if (sellerId) { where += ' AND oi.seller_id = ?'; params.push(sellerId); }
+
+    const [rows] = await pool.query(
+      `SELECT o.id, o.user_id, u.username AS buyer_name, o.total_price, o.status,
+              o.payment_method, o.payment_time, o.tracking_number, o.carrier, o.shipped_at, o.created_at
+       FROM orders o
+       LEFT JOIN users u ON o.user_id = u.id
+       ${sellerId ? 'JOIN order_items oi ON o.id = oi.order_id' : ''}
+       ${where}
+       GROUP BY o.id
+       ORDER BY o.created_at DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(DISTINCT o.id) AS total FROM orders o
+       ${sellerId ? 'JOIN order_items oi ON o.id = oi.order_id' : ''}
+       ${where}`, params
+    );
+
+    // 为每个订单加载商品明细
+    for (const row of rows) {
+      const [items] = await pool.query(
+        `SELECT oi.*, p.name AS product_name, p.image_url
+         FROM order_items oi
+         LEFT JOIN products p ON oi.product_id = p.id
+         WHERE oi.order_id = ?`,
+        [row.id]
+      );
+      row.items = items;
+    }
+
+    res.json({ logs: rows, total, page, limit });
+  } catch (err) {
+    res.status(500).json({ message: '查询失败', error: err.message });
+  }
+};
+
+/**
+ * 获取用户列表（供销售人员查看）
+ * @route GET /api/analytics/users?search=
+ */
+exports.getUsers = async (req, res) => {
+  try {
+    const { search } = req.query;
+    let where = '';
+    const params = [];
+    if (search) { where = 'WHERE username LIKE ? OR email LIKE ?'; params.push(`%${search}%`, `%${search}%`); }
+
+    const [rows] = await pool.query(
+      `SELECT id, username, email, role, created_at FROM users ${where} ORDER BY created_at DESC LIMIT 50`,
+      params
+    );
+    res.json({ users: rows });
+  } catch (err) {
+    res.status(500).json({ message: '查询失败', error: err.message });
+  }
+};
+
+/**
  * 简化IP到地域
  */
 function simplifyIpToRegion(ip) {
   if (!ip || ip === 'unknown') return '未知';
-  // 简化处理：根据内网地址判断
   if (ip.startsWith('127.') || ip.startsWith('192.168.') || ip.startsWith('10.') || ip === '::1' || ip === '::ffff:127.0.0.1') {
     return '本地';
   }
-  // 实际项目中可使用 geoip-lite 等库解析
   return '远程';
 }

@@ -56,6 +56,15 @@ document.addEventListener('DOMContentLoaded', () => {
 		}
 	};
 
+	document.getElementById('nav-profile').onclick = () => {
+		if (heroSection) heroSection.style.display = 'none';
+		if (window.profile && window.profile.showProfile) {
+			window.profile.showProfile();
+		} else {
+			console.error('❌ window.profile.showProfile 不存在!');
+		}
+	};
+
 	// Hero区域"开始浏览"按钮点击事件
 	const heroCta = document.querySelector('.hero-cta');
 	if (heroCta) {

@@ -9,6 +9,7 @@ function updateNavAuth() {
     document.getElementById('nav-login').style.display = 'none';
     document.getElementById('nav-register').style.display = 'none';
     document.getElementById('nav-logout').style.display = '';
+    document.getElementById('nav-profile').style.display = '';
 
     // 按角色显示不同菜单
     const role = user.role || 'buyer';
@@ -32,6 +33,7 @@ function updateNavAuth() {
     document.getElementById('nav-login').style.display = '';
     document.getElementById('nav-register').style.display = '';
     document.getElementById('nav-logout').style.display = 'none';
+    document.getElementById('nav-profile').style.display = 'none';
     document.getElementById('nav-manage').style.display = 'none';
     document.getElementById('nav-sales').style.display = 'none';
     document.getElementById('nav-admin').style.display = 'none';

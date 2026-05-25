@@ -10,5 +10,6 @@ router.post('/logout', userController.logout);
 
 // 需要登录
 router.get('/profile', verifyToken, userController.profile);
+router.get('/login-logs', verifyToken, userController.loginLogs);
 
 module.exports = router;
