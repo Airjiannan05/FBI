@@ -420,6 +420,7 @@ async function loadPurchaseLogsTab(container) {
             <div style="display:flex;align-items:center;gap:8px;padding:4px 0;font-size:0.85rem;">
               <img src="${i.image_url || 'https://via.placeholder.com/40'}" style="width:32px;height:32px;object-fit:cover;border-radius:6px;" alt="">
               <span>${i.product_name || '商品'}</span>
+              ${i.category_name ? `<span style="background:rgba(30,144,255,0.12);color:#60a5fa;padding:1px 6px;border-radius:10px;font-size:0.75rem;">${i.category_name}</span>` : ''}
               <span style="color:var(--color-text-muted);">x${i.quantity}</span>
               <span style="color:var(--color-primary);">¥${i.price}</span>
             </div>

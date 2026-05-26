@@ -283,9 +283,10 @@ exports.getPurchaseLogs = async (req, res) => {
         itemParams.push(sellerId);
       }
       const [items] = await pool.query(
-        `SELECT oi.*, p.name AS product_name, p.image_url
+        `SELECT oi.*, p.name AS product_name, p.image_url, c.name AS category_name
          FROM order_items oi
          LEFT JOIN products p ON oi.product_id = p.id
+         LEFT JOIN categories c ON p.category_id = c.id
          ${itemWhere}`,
         itemParams
       );
