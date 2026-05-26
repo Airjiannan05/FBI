@@ -408,6 +408,17 @@ async function fetchLoginLogs({ userId, page = 1, limit = 20 } = {}) {
   return await res.json();
 }
 
+// 操作日志（仅管理员可查）
+async function fetchOperationLogs({ page = 1, limit = 20, userId = '', operationType = '' } = {}) {
+  const params = new URLSearchParams({ page, limit });
+  if (userId) params.set('userId', userId);
+  if (operationType) params.set('operationType', operationType);
+  const res = await fetch('/api/analytics/operation-logs?' + params, {
+    headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
+  });
+  return await res.json();
+}
+
 // 导出API函数
 window.api = {
   fetchProducts,
@@ -450,5 +461,6 @@ window.api = {
   fetchPurchaseLogs,
   fetchUsers,
   fetchUserProfile,
-  fetchLoginLogs
+  fetchLoginLogs,
+  fetchOperationLogs
 };

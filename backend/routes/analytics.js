@@ -18,4 +18,7 @@ router.get('/browse-logs', verifyToken, requireRole('seller', 'admin'), analytic
 router.get('/purchase-logs', verifyToken, requireRole('seller', 'admin'), analyticsController.getPurchaseLogs);
 router.get('/users', verifyToken, requireRole('seller', 'admin'), analyticsController.getUsers);
 
+// 操作日志（仅管理员）
+router.get('/operation-logs', verifyToken, requireRole('admin'), analyticsController.getOperationLogs);
+
 module.exports = router;

@@ -321,6 +321,43 @@ exports.getUsers = async (req, res) => {
 };
 
 /**
+ * 获取操作日志（仅管理员可查所有用户操作）
+ * @route GET /api/analytics/operation-logs?page=1&limit=20&userId=&operationType=
+ */
+exports.getOperationLogs = async (req, res) => {
+  try {
+    const page = parseInt(req.query.page) || 1;
+    const limit = Math.min(parseInt(req.query.limit) || 20, 100);
+    const offset = (page - 1) * limit;
+    const { userId, operationType } = req.query;
+
+    let where = 'WHERE 1=1';
+    const params = [];
+    if (userId) { where += ' AND ol.user_id = ?'; params.push(userId); }
+    if (operationType) { where += ' AND ol.operation_type = ?'; params.push(operationType); }
+
+    const [rows] = await pool.query(
+      `SELECT ol.id, ol.user_id, u.username, ol.operation_time, ol.operation_type,
+              ol.content, ol.ip_address, ol.target_type, ol.target_id
+       FROM operation_logs ol
+       LEFT JOIN users u ON ol.user_id = u.id
+       ${where}
+       ORDER BY ol.operation_time DESC
+       LIMIT ? OFFSET ?`,
+      [...params, limit, offset]
+    );
+
+    const [[{ total }]] = await pool.query(
+      `SELECT COUNT(*) AS total FROM operation_logs ol ${where}`, params
+    );
+
+    res.json({ logs: rows, total, page, limit });
+  } catch (err) {
+    res.status(500).json({ message: '查询操作日志失败', error: err.message });
+  }
+};
+
+/**
  * 简化IP到地域
  */
 function simplifyIpToRegion(ip) {

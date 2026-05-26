@@ -33,6 +33,9 @@ async function showProfile() {
         <button class="profile-tab" data-tab="categories" style="padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 0.95rem; color: var(--color-text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.3s;">📂 品类管理</button>
         <button class="profile-tab" data-tab="browse-logs" style="padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 0.95rem; color: var(--color-text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.3s;">👁️ 浏览日志</button>
         <button class="profile-tab" data-tab="purchase-logs" style="padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 0.95rem; color: var(--color-text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.3s;">🛒 购买日志</button>
+        ${role === 'admin' ? `
+        <button class="profile-tab" data-tab="operation-logs" style="padding: 10px 20px; border: none; background: none; cursor: pointer; font-size: 0.95rem; color: var(--color-text-muted); border-bottom: 3px solid transparent; margin-bottom: -2px; transition: all 0.3s;">📋 操作日志</button>
+        ` : ''}
         ` : ''}
       </div>
 
@@ -73,6 +76,7 @@ async function loadProfileTab(tabName) {
       case 'categories': await loadCategoriesTab(container); break;
       case 'browse-logs': await loadBrowseLogsTab(container); break;
       case 'purchase-logs': await loadPurchaseLogsTab(container); break;
+      case 'operation-logs': await loadOperationLogsTab(container); break;
       default: container.innerHTML = '<p>未知Tab</p>';
     }
   } catch (err) {
@@ -530,6 +534,78 @@ async function loadLoginLogsTab(container) {
 
       document.getElementById('loginlog-prev').onclick = () => { if (page > 1) { page--; render(); } };
       document.getElementById('loginlog-next').onclick = () => { if (page < totalPages) { page++; render(); } };
+    } catch (err) {
+      container.innerHTML = `<div class="glass-card" style="padding:40px;text-align:center;color:var(--color-accent);">加载失败：${err.message}</div>`;
+    }
+  }
+
+  await render();
+}
+
+// 操作日志Tab（仅管理员可见）
+async function loadOperationLogsTab(container) {
+  const user = window.auth.getCurrentUser();
+  let page = 1;
+  const limit = 20;
+
+  const operationTypeLabels = {
+    add_product: '新增商品', update_product: '更新商品', delete_product: '删除商品',
+    add_category: '新增类别', update_category: '更新类别', delete_category: '删除类别',
+    create_order: '创建订单', pay_order: '支付订单', ship_order: '发货',
+    add_seller: '添加销售', remove_seller: '移除销售', reset_password: '重置密码',
+  };
+
+  async function render() {
+    try {
+      const data = await window.api.fetchOperationLogs({ page, limit });
+      const totalPages = Math.ceil(data.total / limit);
+
+      container.innerHTML = `
+        <div class="glass-card" style="padding: 24px;">
+          <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 20px;">
+            <h3 style="font-family: Orbitron, sans-serif; font-size: 1.3rem; margin: 0;">📋 操作日志</h3>
+            <span style="color: var(--color-text-muted); font-size: 0.85rem;">共 ${data.total} 条记录</span>
+          </div>
+          <div style="overflow-x: auto;">
+            <table style="width: 100%; border-collapse: collapse; font-size: 0.9rem;">
+              <thead>
+                <tr style="border-bottom: 2px solid rgba(148,163,184,0.15);">
+                  <th style="padding: 10px 12px; text-align: left; color: var(--color-text-muted);">时间</th>
+                  <th style="padding: 10px 12px; text-align: left; color: var(--color-text-muted);">账号</th>
+                  <th style="padding: 10px 12px; text-align: left; color: var(--color-text-muted);">操作类型</th>
+                  <th style="padding: 10px 12px; text-align: left; color: var(--color-text-muted);">操作内容</th>
+                  <th style="padding: 10px 12px; text-align: left; color: var(--color-text-muted);">IP地址</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${data.logs.length === 0 ? `<tr><td colspan="5" style="padding: 40px; text-align: center; color: var(--color-text-muted);">暂无操作日志</td></tr>` : ''}
+                ${data.logs.map(log => `
+                  <tr style="border-bottom: 1px solid rgba(148,163,184,0.08); transition: background 0.2s;" onmouseover="this.style.background='rgba(30,144,255,0.04)'" onmouseout="this.style.background='none'">
+                    <td style="padding: 10px 12px; white-space: nowrap; color: var(--color-text);">${new Date(log.operation_time).toLocaleString('zh-CN')}</td>
+                    <td style="padding: 10px 12px; color: var(--color-primary); font-weight: 500;">${log.username || '未知'}</td>
+                    <td style="padding: 10px 12px;">
+                      <span style="background: rgba(30,144,255,0.12); color: #60a5fa; padding: 2px 8px; border-radius: 10px; font-size: 0.8rem;">${operationTypeLabels[log.operation_type] || log.operation_type}</span>
+                    </td>
+                    <td style="padding: 10px 12px; color: var(--color-text); font-size: 0.82rem;">${log.content}</td>
+                    <td style="padding: 10px 12px; color: var(--color-text-muted); font-size: 0.82rem;">${log.ip_address || '-'}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          </div>
+          ${totalPages > 1 ? `
+          <div style="display: flex; justify-content: center; align-items: center; gap: 16px; margin-top: 20px;">
+            <button id="oplog-prev" class="btn-glass" style="padding: 8px 16px;" ${page <= 1 ? 'disabled' : ''}>‹ 上一页</button>
+            <span style="color: var(--color-text-muted); font-size: 0.85rem;">第 ${page} / ${totalPages} 页</span>
+            <button id="oplog-next" class="btn-glass" style="padding: 8px 16px;" ${page >= totalPages ? 'disabled' : ''}>下一页 ›</button>
+          </div>` : ''}
+        </div>
+      `;
+
+      if (totalPages > 1) {
+        document.getElementById('oplog-prev').onclick = () => { if (page > 1) { page--; render(); } };
+        document.getElementById('oplog-next').onclick = () => { if (page < totalPages) { page++; render(); } };
+      }
     } catch (err) {
       container.innerHTML = `<div class="glass-card" style="padding:40px;text-align:center;color:var(--color-accent);">加载失败：${err.message}</div>`;
     }
