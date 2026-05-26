@@ -31,7 +31,7 @@ exports.create = async (req, res) => {
       'INSERT INTO categories (name, description) VALUES (?, ?)',
       [name.trim(), description || null]
     );
-    res.json({ message: '类别添加成功', id: result.insertId });
+    res.json({ message: '类别创建成功', id: result.insertId });
   } catch (err) {
     res.status(500).json({ message: '添加类别失败', error: err.message });
   }

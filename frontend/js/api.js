@@ -353,10 +353,13 @@ async function fetchAdminTrend(period = 'day', days = 30) {
 }
 
 // 浏览日志
-async function fetchBrowseLogs({ page = 1, limit = 20, userId = '', productId = '' } = {}) {
+async function fetchBrowseLogs({ page = 1, limit = 20, userId = '', productId = '', sellerId = '' } = {}) {
   const params = new URLSearchParams({ page, limit });
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   if (userId) params.set('userId', userId);
   if (productId) params.set('productId', productId);
+  if (sellerId) params.set('sellerId', sellerId);
+  else if (user && user.role === 'seller') params.set('sellerId', user.id);
   const res = await fetch('/api/analytics/browse-logs?' + params, {
     headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
   });
@@ -364,10 +367,13 @@ async function fetchBrowseLogs({ page = 1, limit = 20, userId = '', productId = 
 }
 
 // 购买日志
-async function fetchPurchaseLogs({ page = 1, limit = 20, userId = '', status = '' } = {}) {
+async function fetchPurchaseLogs({ page = 1, limit = 20, userId = '', status = '', sellerId = '' } = {}) {
   const params = new URLSearchParams({ page, limit });
+  const user = JSON.parse(localStorage.getItem('user') || 'null');
   if (userId) params.set('userId', userId);
   if (status) params.set('status', status);
+  if (sellerId) params.set('sellerId', sellerId);
+  else if (user && user.role === 'seller') params.set('sellerId', user.id);
   const res = await fetch('/api/analytics/purchase-logs?' + params, {
     headers: { 'Authorization': 'Bearer ' + (localStorage.getItem('token') || '') }
   });
